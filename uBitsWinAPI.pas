@@ -12,6 +12,11 @@ interface
 /// </summary>
 function RegisterURIScheme(const sScheme, sName, sFullAppPath:string): boolean;
 
+/// <summary>
+/// Execute a CMD command and wait for the process to finish
+/// </summary>
+function ExecAndWait(const CommandLine: string) : Boolean;
+
 implementation
 
 uses
@@ -27,21 +32,18 @@ var
   paths   : TArray<string>;
 
 
-function WriteIfNeeded(sKey, sValue:string):boolean;
+procedure WriteIfNeeded(sKey, sValue:string);
 begin
 
-  result := false;
-
   if Reg.ValueExists(sKey) then begin
-    if Reg.ReadString(sKey).Equals(sValue) then begin
-      result := true;
-      exit;
-    end;
 
+    if Reg.ReadString(sKey).Equals(sValue) then
+      exit;
   end;
 
   reg.Access := KEY_WRITE;
   Reg.WriteString(sKey, sValue);
+
 end;
 
 {
@@ -138,5 +140,35 @@ begin
 
 end;
 
+{******************************************************************************}
 
+function ExecAndWait(const CommandLine: string) : Boolean;
+var
+  StartupInfo     : TStartupInfo;        // start-up info passed to process
+  ProcessInfo     : TProcessInformation; // info about the process
+  ProcessExitCode : DWord;           // process's exit code
+begin
+  // Set default error result
+  Result := False;
+  // Initialise startup info structure to 0, and record length
+  FillChar(StartupInfo, SizeOf(StartupInfo), 0);
+  StartupInfo.cb := SizeOf(StartupInfo);
+  // Execute application commandline
+  if CreateProcess(nil, PChar('C:\\windows\\system32\\cmd.exe /C ' + CommandLine), nil, nil, False, 0, nil, nil, StartupInfo, ProcessInfo) then
+  begin
+    try
+      // Wait for application to complete
+      if WaitForSingleObject(ProcessInfo.hProcess, INFINITE) = WAIT_OBJECT_0 then
+        // It's completed - get its exit code
+        if GetExitCodeProcess(ProcessInfo.hProcess, ProcessExitCode) then
+          // Check exit code is zero => successful completion
+          if ProcessExitCode = 0 then
+            Result := True;
+    finally
+      // Tidy up
+      CloseHandle(ProcessInfo.hProcess);
+      CloseHandle(ProcessInfo.hThread);
+    end;
+  end;
+end;
 end.
