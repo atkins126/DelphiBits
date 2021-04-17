@@ -21,6 +21,15 @@ function FloatToFrac(const d: double; var Teiler : byte): double; overload;
 /// </remarks>
 function FloatToFracStr(const d:double):string;
 
+/// <summary> mathematically round to specific fraction</summary>
+function RoundToFrac(Value : Double; Teiler: byte):double;
+
+/// <summary> round down to specific fraction</summary>
+function FloorToFrac(Value : Double; Teiler: byte):double;
+
+/// <summary> round up to specific fraction</summary>
+function CeilToFrac(Value : Double; Teiler: byte):double;
+
 implementation
 
 uses
@@ -126,5 +135,28 @@ begin
    end;
 
 end;
+
 {******************************************************************************}
+
+function RoundToFrac(Value : Double; Teiler: byte):double;
+begin
+  result := Math.SimpleRoundTo(Value * Teiler, 0) / Teiler;
+end;
+
+{******************************************************************************}
+
+function FloorToFrac(Value : Double; Teiler: byte):double;
+begin
+  result := Math.Floor(Value * Teiler) / Teiler;
+end;
+
+{******************************************************************************}
+
+function CeilToFrac(Value : Double; Teiler: byte):double;
+begin
+  result := Math.Ceil(Value * Teiler) / Teiler;
+end;
+
+{******************************************************************************}
+
 end.
